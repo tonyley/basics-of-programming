@@ -1,0 +1,13 @@
+*.iml
+*.log
+*.pyc
+.DS_Store
+thumbs.db
+local*.properties
+local*.gradle
+/.gradle
+/.idea
+/build
+/captures
+/lender
+/local*
