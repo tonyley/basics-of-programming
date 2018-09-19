@@ -18,23 +18,23 @@ public class RedBlackTree {
         return this.root;
     }
 
-    private Node parent(Node node) {
+    private Node parentOf(Node node) {
         return node == null ? null : node.parent;
     }
 
-    private Node left(Node node) {
+    private Node leftOf(Node node) {
         return node == null ? null : node.left;
     }
 
-    private Node right(Node node) {
+    private Node rightOf(Node node) {
         return node == null ? null : node.right;
     }
 
-    private int value(Node node) {
+    private int valueOf(Node node) {
         return (node == null) ? 0 : node.value;
     }
 
-    private boolean color(Node node) {
+    private boolean colorOf(Node node) {
         return (node == null) ? BLACK : node.color;
     }
 
@@ -77,7 +77,7 @@ public class RedBlackTree {
         /**
          * 寻找并判断是否有右节点
          */
-        Node right = right(pivot);
+        Node right = rightOf(pivot);
         if (right == null) {
             return;
         }
@@ -85,19 +85,19 @@ public class RedBlackTree {
         /**
          * 1.将右节点的左节点作为pivot的新右节点
          */
-        setRight(pivot, left(right));
-        setParent(left(right), pivot);
+        setRight(pivot, leftOf(right));
+        setParent(leftOf(right), pivot);
 
         /**
          * 2.使用右节点顶替pivot原位置
          */
-        setParent(right, parent(pivot));
-        if (parent(pivot) == null) {
+        setParent(right, parentOf(pivot));
+        if (parentOf(pivot) == null) {
             setRoot(right);
-        } else if (pivot == left(parent(pivot))) {
-            setLeft(parent(pivot), right);
+        } else if (pivot == leftOf(parentOf(pivot))) {
+            setLeft(parentOf(pivot), right);
         } else {
-            setRight(parent(pivot), right);
+            setRight(parentOf(pivot), right);
         }
 
         /**
@@ -115,7 +115,7 @@ public class RedBlackTree {
             return;
         }
 
-        Node left = left(pivot);
+        Node left = leftOf(pivot);
         if (left == null) {
             return;
         }
@@ -123,19 +123,19 @@ public class RedBlackTree {
         /**
          * 1.将左节点的右节点作为pivot的新左节点
          */
-        setLeft(pivot, right(left));
-        setParent(right(left), pivot);
+        setLeft(pivot, rightOf(left));
+        setParent(rightOf(left), pivot);
 
         /**
          * 2.使用左节点顶替pivot原位置
          */
-        setParent(left, parent(pivot));
-        if (parent(pivot) == null) {
+        setParent(left, parentOf(pivot));
+        if (parentOf(pivot) == null) {
             setRoot(left);
-        } else if (pivot == right(parent(pivot))) {
-            setRight(parent(pivot), left);
+        } else if (pivot == rightOf(parentOf(pivot))) {
+            setRight(parentOf(pivot), left);
         } else {
-            setLeft(parent(pivot), left);
+            setLeft(parentOf(pivot), left);
         }
 
         /**
@@ -150,36 +150,49 @@ public class RedBlackTree {
     }
 
     private void fixupInsert(Node fixupNode) {
-        Node uncleNode;
-        while (RED == color(parent(fixupNode))) {
-            if (parent(fixupNode) == left(parent(parent(fixupNode)))) {
-                uncleNode = right(parent(parent(fixupNode)));
-            } else {
-                uncleNode = left(parent(parent(fixupNode)));
-            }
-
-            if (RED == color(uncleNode)) {
-                /**
-                 * 叔叔节点为红
-                 */
-                setColor(parent(fixupNode), BLACK);
-                setColor(uncleNode, BLACK);
-                fixupNode = parent(parent(fixupNode));
-            } else {
-                if (fixupNode == right(parent(fixupNode))) {
+        while (RED == colorOf(parentOf(fixupNode))) {
+            if (parentOf(fixupNode) == leftOf(parentOf(parentOf(fixupNode)))) {
+                Node uncleNode = rightOf(parentOf(parentOf(fixupNode)));
+                if (RED == colorOf(uncleNode)) {
                     /**
-                     * 叔叔节点为黑，当前节点为其父节点的右节点
+                     * 叔叔节点为红
                      */
-                    fixupNode = parent(fixupNode);
-                    rotateLeft(fixupNode);
-                }
+                    setColor(parentOf(fixupNode), BLACK);
+                    setColor(uncleNode, BLACK);
+                    setColor(parentOf(parentOf(fixupNode)), RED);
+                    fixupNode = parentOf(parentOf(fixupNode));
+                } else {
+                    if (fixupNode == rightOf(parentOf(fixupNode))) {
+                        /**
+                         * 叔叔节点为黑，当前节点为其父节点的右节点
+                         */
+                        fixupNode = parentOf(fixupNode);
+                        rotateLeft(fixupNode);
+                    }
 
-                /**
-                 * 叔叔节点为黑，当前节点为其父节点的左节点
-                 */
-                setColor(parent(fixupNode), BLACK);
-                setColor(parent(parent(fixupNode)), RED);
-                rotateRight(parent(parent(fixupNode)));
+                    /**
+                     * 叔叔节点为黑，当前节点为其父节点的左节点
+                     */
+                    setColor(parentOf(fixupNode), BLACK);
+                    setColor(parentOf(parentOf(fixupNode)), RED);
+                    rotateRight(parentOf(parentOf(fixupNode)));
+                }
+            } else {
+                Node uncleNode = leftOf(parentOf(parentOf(fixupNode)));
+                if (RED == colorOf(uncleNode)) {
+                    setColor(parentOf(fixupNode), BLACK);
+                    setColor(uncleNode, BLACK);
+                    setColor(parentOf(parentOf(fixupNode)), RED);
+                    fixupNode = parentOf(parentOf(fixupNode));
+                } else {
+                    if (fixupNode == leftOf(parentOf(fixupNode))) {
+                        fixupNode = parentOf(fixupNode);
+                        rotateRight(fixupNode);
+                    }
+                    setColor(parentOf(fixupNode), BLACK);
+                    setColor(parentOf(parentOf(fixupNode)), RED);
+                    rotateLeft(parentOf(parentOf(fixupNode)));
+                }
             }
         }
         setColor(root(), BLACK);
@@ -195,10 +208,10 @@ public class RedBlackTree {
          */
         while (subRoot != null) {
             newParent = subRoot;
-            if (value(newNode) < value(subRoot)) {
-                subRoot = left(subRoot);
+            if (valueOf(newNode) < valueOf(subRoot)) {
+                subRoot = leftOf(subRoot);
             } else {
-                subRoot = right(subRoot);
+                subRoot = rightOf(subRoot);
             }
         }
 
@@ -208,7 +221,7 @@ public class RedBlackTree {
         setParent(newNode, newParent);
         if (newParent == null) {
             setRoot(newNode);
-        } else if (value(newNode) < value(newParent)) {
+        } else if (valueOf(newNode) < valueOf(newParent)) {
             setLeft(newParent, newNode);
         } else {
             setRight(newParent, newNode);
@@ -216,6 +229,7 @@ public class RedBlackTree {
 
         setColor(newNode, RED);
         fixupInsert(newNode);
+        this.size++;
     }
 
     public void remove(int value) {
@@ -226,14 +240,14 @@ public class RedBlackTree {
         Node subRoot = root();
         Node targetNode = null;
         while (subRoot != null) {
-            int subRootVal = value(subRoot);
+            int subRootVal = valueOf(subRoot);
             if (subRootVal == value) {
                 targetNode = subRoot;
                 break;
             } else if (value < subRootVal) {
-                subRoot = left(subRoot);
+                subRoot = leftOf(subRoot);
             } else {
-                subRoot = right(subRoot);
+                subRoot = rightOf(subRoot);
             }
         }
         return targetNode != null;
@@ -248,9 +262,12 @@ public class RedBlackTree {
     }
 
     public void print() {
-        final int interval = 2;
+        final int interval = 4;
 
-        final int locOffset = Math.abs(traversalPreOrder(root(), interval));
+        final Node root = root();
+        measureLevel(root);
+        resetLevel(root);
+        final int locOffset = Math.abs(traversePreOrder(root, interval));
 
         final ArrayList<Node> list = new ArrayList<>();
         list.add(root());
@@ -273,11 +290,11 @@ public class RedBlackTree {
                 }
 
                 builder.append(node.toString());
-                Node child = left(node);
+                Node child = leftOf(node);
                 if (child != null) {
                     list.add(child);
                 }
-                child = right(node);
+                child = rightOf(node);
                 if (child != null) {
                     list.add(child);
                 }
@@ -286,40 +303,89 @@ public class RedBlackTree {
         } while (!list.isEmpty());
     }
 
-    private int traversalPreOrder(Node node, int interval) {
+    private int traversePreOrder(Node node, int interval) {
         if (node == null) {
             return 0;
         }
 
         int minStartLoc = 0;
-        final int width = width(node);
-        Node parent = parent(node);
+        final int width = widthOf(node);
+        Node parent = parentOf(node);
         if (parent != null) {
-            int parentWidth = width(parent);
-            if (node == left(parent)) {
-                int startLoc = (parent.startLoc + (parentWidth / 2)) - (interval / 2 + width);
+            int parentWidth = widthOf(parent);
+            int intervalTemp = interval * node.level;
+            if (node == leftOf(parent)) {
+                int startLoc = (parent.startLoc + (parentWidth / 2)) - (intervalTemp / 2 + width);
                 node.startLoc = startLoc;
                 minStartLoc = startLoc;
             } else {
-                int startLoc = (parent.startLoc + (parentWidth / 2)) + (interval / 2);
+                int startLoc = (parent.startLoc + (parentWidth / 2)) + (intervalTemp / 2);
                 node.startLoc = startLoc;
             }
         }
 
-        if (left(node) != null) {
-            int startLoc = traversalPreOrder(left(node), interval);
+        if (leftOf(node) != null) {
+            int startLoc = traversePreOrder(leftOf(node), interval);
             minStartLoc = Math.min(startLoc, minStartLoc);
         }
 
-        if (right(node) != null) {
-            traversalPreOrder(right(node), interval);
+        if (rightOf(node) != null) {
+            traversePreOrder(rightOf(node), interval);
         }
 
         return minStartLoc;
     }
 
-    private int width(Node node) {
+    private int widthOf(Node node) {
         return (node == null ? 0 : node.toString().length());
+    }
+
+    private int measureLevel(Node node) {
+        if (node == null) {
+            return 0;
+        }
+
+        Node left = leftOf(node);
+        Node right = rightOf(node);
+        int leftLevel = 0;
+        int rightLevel = 0;
+        if (left != null) {
+            leftLevel = measureLevel(left);
+        }
+
+        if (right != null) {
+            rightLevel = measureLevel(right);
+        }
+
+        int level = Math.max(leftLevel, rightLevel) + 1;
+        node.level = level;
+        return level;
+    }
+
+    private void resetLevel(Node node) {
+        if (node == null) {
+            return;
+        }
+
+        Node parent = parentOf(node);
+        if (parent != null) {
+            int level = parent.level - 1;
+            if (level < 1) {
+                level = 1;
+            }
+
+            node.level = level;
+        }
+
+        Node left = leftOf(node);
+        if (left != null) {
+            resetLevel(left);
+        }
+
+        Node right = rightOf(node);
+        if (right != null) {
+            resetLevel(right);
+        }
     }
 
     public static class Node {
@@ -335,6 +401,8 @@ public class RedBlackTree {
         boolean color = RED;
 
         private int startLoc;
+
+        private int level;
 
         public Node(int value) {
             this.value = value;
