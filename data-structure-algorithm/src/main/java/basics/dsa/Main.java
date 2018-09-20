@@ -15,23 +15,25 @@ public class Main {
         tree.add(5);
         tree.add(4);
         tree.add(2);
+        tree.print("    ****---****    ");
 
-        tree.print();
-        System.out.println("------");
         tree.add(1);
         tree.add(11);
         tree.add(6);
         tree.add(3);
-        tree.print();
-        System.out.println("------");
+        tree.print("    ****---****    ");
 
         tree.add(12);
-        //tree.add(32);
-        tree.print();
-        System.out.println("------");
+        tree.print("    ****---****    ");
 
         tree.add(9);
-        tree.print();
+        tree.print("    ****---****    ");
+
+        tree.remove(9);
+        tree.print("    ****---****    ");
+
+        tree.remove(12);
+        tree.print("    ****---****    ");
     }
 
     private static void testIf() {

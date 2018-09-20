@@ -3,6 +3,13 @@ package basics.dsa;
 import java.util.ArrayList;
 
 /**
+ * Reference:
+ * http://www.cs.princeton.edu/~rs/talks/LLRB/RedBlack.pdf
+ * https://zh.wikipedia.org/wiki/%E7%BA%A2%E9%BB%91%E6%A0%91
+ * https://www.csie.ntu.edu.tw/~hsinmu/courses/_media/dsa1_10fall/lecture15.pdf
+ * https://github.com/julycoding/The-Art-Of-Programming-By-July/blob/master/ebook/zh/03.01.md
+ * <p>
+ * <p>
  * Created by Gary Lei on 2018/9/14.
  */
 public class RedBlackTree {
@@ -145,10 +152,6 @@ public class RedBlackTree {
         setRight(left, pivot);
     }
 
-    private void fixupRemove() {
-
-    }
-
     private void fixupInsert(Node fixupNode) {
         while (RED == colorOf(parentOf(fixupNode))) {
             if (parentOf(fixupNode) == leftOf(parentOf(parentOf(fixupNode)))) {
@@ -232,11 +235,139 @@ public class RedBlackTree {
         this.size++;
     }
 
-    public void remove(int value) {
+    public boolean remove(int value) {
+        Node targetNode = find(value);
+        if (targetNode == null) {
+            return false;
+        }
 
+        /**
+         * 查找继承节点
+         */
+        Node successor = targetNode;
+        if (leftOf(targetNode) != null && rightOf(targetNode) != null) {
+            Node max = leftOf(targetNode);
+            Node right = rightOf(max);
+            while (right != null) {
+                max = right;
+                right = rightOf(right);
+            }
+            successor = max;
+        }
+
+        /**
+         * 删除继承节点
+         */
+        Node childNode;
+        if (leftOf(successor) != null) {
+            childNode = leftOf(successor);
+        } else {
+            childNode = rightOf(successor);
+        }
+
+        if (childNode != null) {
+            setParent(childNode, parentOf(successor));
+        }
+
+        if (parentOf(successor) == null) {
+            setRoot(childNode);
+        } else {
+            if (leftOf(parentOf(successor)) == successor) {
+                setLeft(parentOf(successor), childNode);
+            } else {
+                setRight(parentOf(successor), childNode);
+            }
+        }
+
+        /**
+         * 使用继承节点替换当前删除节点
+         */
+        if (targetNode != successor) {
+            targetNode.value = successor.value;
+        }
+
+        if (BLACK == colorOf(successor)) {
+            fixupRemove(childNode);
+        }
+        return true;
+    }
+
+    private void fixupRemove(Node fixupNode) {
+        while (fixupNode != null && fixupNode != this.root && BLACK == colorOf(fixupNode)) {
+            if (fixupNode == leftOf(parentOf(fixupNode))) {
+                Node brother = rightOf(parentOf(fixupNode));
+                /**
+                 * case 1: 兄弟节点为红色，处理之后重新进入算法
+                 */
+                if (RED == colorOf(brother)) {
+                    setColor(brother, BLACK);
+                    setColor(parentOf(fixupNode), RED);
+                    rotateLeft(parentOf(fixupNode));
+                    brother = rightOf(parentOf(fixupNode));
+                }
+
+                /**
+                 * case 2: 兄弟节点为黑色，且兄弟节点的左右子节点都为黑色
+                 */
+                if (BLACK == colorOf(leftOf(brother)) && BLACK == colorOf(rightOf(brother))) {
+                    setColor(brother, RED);
+                    fixupNode = parentOf(fixupNode);
+                } else {
+                    /**
+                     * case 3: 兄弟节点为黑色，且兄弟节点的右节点为黑色，左节点为红色，处理完之后重新进入算法
+                     */
+                    if (BLACK == colorOf(rightOf(brother))) {
+                        setColor(leftOf(brother), BLACK);
+                        setColor(brother, RED);
+                        rotateRight(brother);
+                        brother = rightOf(parentOf(fixupNode));
+                    }
+
+                    /**
+                     * case 4: 兄弟节点为黑色, 且兄弟节点的右节点为红色
+                     */
+                    setColor(brother, colorOf(parentOf(fixupNode)));
+                    setColor(parentOf(fixupNode), BLACK);
+                    setColor(rightOf(brother), BLACK);
+                    rotateLeft(parentOf(fixupNode));
+                    fixupNode = root();
+                }
+            } else {
+                Node brother = leftOf(parentOf(fixupNode));
+                if (RED == colorOf(brother)) {
+                    setColor(brother, BLACK);
+                    setColor(parentOf(fixupNode), RED);
+                    rotateRight(parentOf(fixupNode));
+                    brother = leftOf(parentOf(fixupNode));
+                }
+
+                if (BLACK == colorOf(leftOf(brother)) && BLACK == colorOf(rightOf(brother))) {
+                    setColor(brother, RED);
+                    fixupNode = parentOf(fixupNode);
+                } else {
+                    if (BLACK == colorOf(leftOf(brother))) {
+                        setColor(rightOf(brother), BLACK);
+                        setColor(brother, RED);
+                        rotateLeft(brother);
+                        brother = leftOf(parentOf(fixupNode));
+                    }
+
+                    setColor(brother, colorOf(parentOf(fixupNode)));
+                    setColor(parentOf(fixupNode), BLACK);
+                    setColor(leftOf(brother), BLACK);
+                    rotateRight(parentOf(fixupNode));
+                    fixupNode = root();
+                }
+            }
+        }
+        setColor(fixupNode, BLACK);
     }
 
     public boolean contains(int value) {
+        return find(value) != null;
+    }
+
+    private Node find(int value) {
         Node subRoot = root();
         Node targetNode = null;
         while (subRoot != null) {
@@ -250,7 +381,7 @@ public class RedBlackTree {
                 subRoot = rightOf(subRoot);
             }
         }
-        return targetNode != null;
+        return targetNode;
     }
 
     public int size() {
@@ -261,7 +392,7 @@ public class RedBlackTree {
         return size != 0;
     }
 
-    public void print() {
+    public void print(String tag) {
         final int interval = 4;
 
         final Node root = root();
@@ -301,6 +432,8 @@ public class RedBlackTree {
             }
             System.out.println(builder.toString());
         } while (!list.isEmpty());
+        System.out.println(tag);
+
     }
 
     private int traversePreOrder(Node node, int interval) {
